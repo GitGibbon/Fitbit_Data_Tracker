@@ -1,0 +1,4 @@
+#This basically just locks out the other file names stored in it.
+.env
+Secret.txt
+__pycache__/
