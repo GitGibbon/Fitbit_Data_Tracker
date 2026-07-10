@@ -12,19 +12,26 @@ _FILTER_FIELD = {
 
 def get_data(access_token, point):
     tz = ZoneInfo(os.getenv("TIME_ZONE"))
-    yesterday = (datetime.now(tz) - timedelta(days=1)).date()
-    today = yesterday + timedelta(days=1)
+    day = (datetime.now(tz) - timedelta(days=1)).date()   # activity day D (yesterday)
     field = _FILTER_FIELD[point]
+
+    # Exercise happened during day D. The sleep we want is the night that FOLLOWS day D
+    # (D -> D+1), which ends the morning of D+1 -- so shift sleep's window forward a day.
+    if point == "sleep":
+        lo = day + timedelta(days=1)
+    else:
+        lo = day
+    hi = lo + timedelta(days=1)
 
     url = f"https://health.googleapis.com/v4/users/me/dataTypes/{point}/dataPoints"
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json"
     }
-    # Scope to yesterday's local day server-side; civil time takes no offset. Only
-    # >= and < are supported operators, so use a half-open [start, next-day) window.
+    # Scope server-side; civil time takes no offset. Only >= and < are supported
+    # operators, so use a half-open [lo, lo+1day) window.
     params = {
-        "filter": f'{field} >= "{yesterday}T00:00:00" AND {field} < "{today}T00:00:00"'
+        "filter": f'{field} >= "{lo}T00:00:00" AND {field} < "{hi}T00:00:00"'
     }
 
     response = requests.get(url, headers=headers, params=params).json()
