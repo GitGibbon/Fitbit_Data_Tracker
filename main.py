@@ -15,7 +15,7 @@ def main():
     client_id = os.getenv("GOOGLE_CLIENT_ID")
     client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
 
-    with open("secret.txt", "r") as f:
+    with open("Secret.txt", "r") as f:
         refresh_token = f.read().strip()
 
     access_token = refresh_access_token(refresh_token, client_id, client_secret)

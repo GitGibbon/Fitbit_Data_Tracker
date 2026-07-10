@@ -62,7 +62,6 @@ def print_steps_metrics(steps_rollup):
 
     for dp in points:
         d = dp["civilStartTime"]["date"]
-        # countSum is a string ("8448"), so convert with int().
         total_steps = int(dp["steps"]["countSum"])
         print(f"\nSteps Summary ({d['year']}-{d['month']:02d}-{d['day']:02d}):")
         print(f"  Total Steps: {total_steps}")
@@ -77,7 +76,6 @@ def print_calories_metrics(calories_rollup):
 
     for dp in points:
         d = dp["civilStartTime"]["date"]
-        # kcalSum is already a number (not a string), so just format it.
         kcal = dp["totalCalories"]["kcalSum"]
         print(f"\nCalories Summary ({d['year']}-{d['month']:02d}-{d['day']:02d}):")
         print(f"  Total Calories: {kcal:.0f} kcal")

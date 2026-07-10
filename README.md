@@ -27,7 +27,7 @@ For a given day it reports:
 1. Install dependencies:
 
    ```bash
-   python -m pip install requests python-dotenv
+   python -m pip install -r requirements.txt
    ```
 
 2. Create a `.env` file in the project root with your Google Health API credentials:
@@ -51,3 +51,4 @@ For a given day it reports:
 - [ ] Persist daily metrics to a SQLite database
 - [ ] Query trends over time (e.g. weekly sleep and step averages)
 - [ ] Add basic error handling for network/API failures
+- [ ] Add regression and a messaging system for AI driven insights on your specific sleep schedule and what works best for you

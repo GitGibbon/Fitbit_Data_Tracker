@@ -1,14 +1,13 @@
 import requests
-import json
 from get_yesterday import get_yesterday
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-start, end = get_yesterday()
-start_dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
-end_dt = datetime.fromisoformat(end.replace("Z", "+00:00"))
-
 def get_data(access_token, point):
+    start, end = get_yesterday()
+    start_dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
+    end_dt = datetime.fromisoformat(end.replace("Z", "+00:00"))
+
     url = f"https://health.googleapis.com/v4/users/me/dataTypes/{point}/dataPoints"
     #like the subject like, who are you and how do you want your data back?
     headers = {
