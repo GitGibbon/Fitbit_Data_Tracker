@@ -33,12 +33,12 @@ def get_data(access_token, point):
     params = {
         "filter": f'{field} >= "{lo}T00:00:00" AND {field} < "{hi}T00:00:00"'
     }
-
-    response = requests.get(url, headers=headers, params=params).json()
-    if "error" in response:
-        raise RuntimeError(f"Error fetching data: {response['error']}")
-    # ponytail: no pagination; one local day of sleep/exercise events is far under the
-    # 1440 default page size. Add pageToken handling if a day ever exceeds that.
+    try:
+        ask = requests.get(url, headers=headers, params=params)
+        ask.raise_for_status()
+    except requests.exceptions.HTTPError:
+        raise RuntimeError(f"HTTP error occurred: {ask.status_code} - {ask.text}")
+    response = ask.json()
     return response.get("dataPoints", [])
 
 
@@ -70,8 +70,10 @@ def get_daily_rollup(access_token, point, days_ago=1):
         },
         "windowSizeDays": 1,
     }
-
-    response = requests.post(url, headers=headers, json=body).json()
-    if "error" in response:
-        raise RuntimeError(f"Error rolling up {point}: {response['error']}")
+    try:
+        ask = requests.post(url, headers=headers, json=body)
+        ask.raise_for_status()
+    except requests.exceptions.HTTPError:
+        raise RuntimeError(f"HTTP error occurred: {ask.status_code} - {ask.text}")
+    response = ask.json()
     return response
