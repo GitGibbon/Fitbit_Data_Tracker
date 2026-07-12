@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import os
 
-# Each data type allows different filterable fields (AIP-160), so map per type.
-# Both use civil (wall-clock) time -- same local-day model as get_daily_rollup.
+# Each data type allows different filterable fields, so map per type.
+# We are using local (civil) time for filtering, so we can get the data for a specific day in our timezone.
 _FILTER_FIELD = {
     "exercise": "exercise.interval.civil_start_time",
     "sleep": "sleep.interval.civil_end_time",
@@ -15,8 +15,9 @@ def get_data(access_token, point):
     day = (datetime.now(tz) - timedelta(days=1)).date()   # activity day D (yesterday)
     field = _FILTER_FIELD[point]
 
-    # Exercise happened during day D. The sleep we want is the night that FOLLOWS day D
-    # (D -> D+1), which ends the morning of D+1 -- so shift sleep's window forward a day.
+    #Our exercise happened during day D, but we want the exercise before our night of rest.
+    #This means we need to exclude sleep from the rest of the data.
+    #We do this by setting the lower bound to the next day for sleep, and the same day for everything else.
     if point == "sleep":
         lo = day + timedelta(days=1)
     else:
@@ -28,13 +29,11 @@ def get_data(access_token, point):
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json"
     }
-    # Scope server-side; civil time takes no offset. Only >= and < are supported
-    # operators, so use a half-open [lo, lo+1day) window.
     params = {
         "filter": f'{field} >= "{lo}T00:00:00" AND {field} < "{hi}T00:00:00"'
     }
     try:
-        ask = requests.get(url, headers=headers, params=params)
+        ask = requests.get(url, headers=headers, params=params, timeout=10)
         ask.raise_for_status()
     except requests.exceptions.HTTPError:
         raise RuntimeError(f"HTTP error occurred: {ask.status_code} - {ask.text}")
@@ -48,10 +47,8 @@ def get_daily_rollup(access_token, point, days_ago=1):
     tz = ZoneInfo(time_zone)
     day = (datetime.now(tz) - timedelta(days=days_ago)).date()
     next_day = day + timedelta(days=1)
-    # dailyRollUp uses CivilTimeInterval (wall-clock), which has no timezone field by
-    # design. tz is only used above to pick which calendar day "yesterday" is. Do NOT
-    # convert this range to UTC — that would feed physical time into a civil-time field.
-
+    # dailyRollUp uses civil time in order to most accurately map specific days to their sleep and activity schedules.
+    #tz is ONLY used for identifying the calendar day, do not use it for another purpose or translate it.
     url = f"https://health.googleapis.com/v4/users/me/dataTypes/{point}/dataPoints:dailyRollUp"
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -71,7 +68,7 @@ def get_daily_rollup(access_token, point, days_ago=1):
         "windowSizeDays": 1,
     }
     try:
-        ask = requests.post(url, headers=headers, json=body)
+        ask = requests.post(url, headers=headers, json=body, timeout=10)
         ask.raise_for_status()
     except requests.exceptions.HTTPError:
         raise RuntimeError(f"HTTP error occurred: {ask.status_code} - {ask.text}")

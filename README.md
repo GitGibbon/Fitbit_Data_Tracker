@@ -36,6 +36,7 @@ For a given day it reports:
    GOOGLE_CLIENT_ID=your_client_id
    GOOGLE_CLIENT_SECRET=your_client_secret
    GOOGLE_REFRESH_TOKEN=your_refresh_token
+   TIME_ZONE=Country/City
    ```
 
    `.env` is gitignored and never committed.
@@ -50,5 +51,4 @@ For a given day it reports:
 
 - [ ] Persist daily metrics to a SQLite database
 - [ ] Query trends over time (e.g. weekly sleep and step averages)
-- [ ] Add basic error handling for network/API failures
 - [ ] Add regression and a messaging system for AI driven insights on your specific sleep schedule and what works best for you

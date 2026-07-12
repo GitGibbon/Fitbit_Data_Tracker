@@ -7,28 +7,38 @@ def print_exercise_metrics(exercise_data):
         return
     for ex in exercise_data:
         interval = ex["exercise"]["interval"]
-        metrics = ex["exercise"]["metricsSummary"]
-        zones = metrics["heartRateZoneDurations"]
+        metrics = ex["exercise"].get("metricsSummary", {})
+        zones = metrics.get("heartRateZoneDurations")
 
-        # Convert values
-        active_duration_min = int(ex["exercise"]["activeDuration"].replace("s", "")) / 60
-        distance_m = metrics["distanceMillimeters"] / 1000
+        raw_duration = ex["exercise"].get("activeDuration", "0s")
+        try:
+            active_duration_min = float(raw_duration.replace("s", "")) / 60
+        except ValueError:
+            active_duration_min = None
+
+        distance_m = metrics.get("distanceMillimeters")
 
         print("\nExercise Session:")
         print(f"  Start Time (UTC): {interval['startTime']}")
         print(f"  End Time   (UTC): {interval['endTime']}")
-        print(f"  Active Duration: {active_duration_min:.1f} minutes")
-        print(f"  Calories Burned: {metrics['caloriesKcal']} kcal")
-        print(f"  Distance: {distance_m:.2f} meters")
-        print(f"  Steps: {metrics['steps']}")
-        print(f"  Avg Heart Rate: {metrics['averageHeartRateBeatsPerMinute']} bpm")
-        print(f"  Active Zone Minutes: {metrics['activeZoneMinutes']}")
+        if active_duration_min is not None:
+            print(f"  Active Duration: {active_duration_min:.1f} minutes")
+        print(f"  Calories Burned: {metrics.get('caloriesKcal')} kcal")
+        if distance_m is not None:
+            print(f"  Distance: {distance_m / 1000:.2f} meters")
+        if "steps" in metrics:
+            print(f"  Steps: {metrics['steps']}")
+        if "averageHeartRateBeatsPerMinute" in metrics:
+            print(f"  Avg Heart Rate: {metrics['averageHeartRateBeatsPerMinute']} bpm")
+        if "activeZoneMinutes" in metrics:
+            print(f"  Active Zone Minutes: {metrics['activeZoneMinutes']}")
 
-        print("  Heart Rate Zones:")
-        print(f"    Light: {zones['lightTime']}")
-        print(f"    Moderate: {zones['moderateTime']}")
-        print(f"    Vigorous: {zones['vigorousTime']}")
-        print(f"    Peak: {zones['peakTime']}")
+        if zones:
+            print("  Heart Rate Zones:")
+            print(f"    Light: {zones.get('lightTime')}")
+            print(f"    Moderate: {zones.get('moderateTime')}")
+            print(f"    Vigorous: {zones.get('vigorousTime')}")
+            print(f"    Peak: {zones.get('peakTime')}")
 
 
 def print_sleep_metrics(sleep_data):
@@ -39,7 +49,7 @@ def print_sleep_metrics(sleep_data):
     for sl in sleep_data:
         interval = sl["sleep"]["interval"]
         summary = sl["sleep"]["summary"]
-        stages = summary["stagesSummary"]
+        stages = summary.get("stagesSummary", [])
 
         print("\nSleep Session:")
         print(f"  Start Time (UTC): {interval['startTime']}")
